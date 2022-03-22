@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# Learn more at: https://juju.is/docs/sdk
 
+"""Charm for MySQL HAProxy."""
 
 import logging
 
@@ -28,7 +27,9 @@ class MySQLHAProxyOperatorCharm(CharmBase):
 
         self.service_name = "mysql-haproxy"
 
-        self.framework.observe(self.on.mysql_haproxy_pebble_ready, self._on_mysql_haproxy_pebble_ready)
+        self.framework.observe(
+            self.on.mysql_haproxy_pebble_ready, self._on_mysql_haproxy_pebble_ready
+        )
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
     # =======================
@@ -37,7 +38,6 @@ class MySQLHAProxyOperatorCharm(CharmBase):
 
     def _on_mysql_haproxy_pebble_ready(self, event) -> None:
         """Define and start a workload using the Pebble API."""
-
         # Get a reference the container attribute on the PebbleReadyEvent
         container = event.workload
 
@@ -53,13 +53,14 @@ class MySQLHAProxyOperatorCharm(CharmBase):
         self.unit.status = ActiveStatus("HAProxy started in the workload container")
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
-        """Handle changes in configuration"""
-
+        """Handle changes in configuration."""
         container = self.unit.get_container(WORKLOAD_CONTAINER_NAME)
 
         # Wait until pebble is operational
         if not container.can_connect():
-            self.unit.status = WaitingStatus(f"Waiting for {WORKLOAD_CONTAINER_NAME} container to start")
+            self.unit.status = WaitingStatus(
+                f"Waiting for {WORKLOAD_CONTAINER_NAME} container to start"
+            )
             event.defer()
             return
 
@@ -68,32 +69,31 @@ class MySQLHAProxyOperatorCharm(CharmBase):
 
         self._restart_haproxy()
 
-        self.unit.status = ActiveStatus()       
-
+        self.unit.status = ActiveStatus()
 
     # =======================
     #  Helpers
     # =======================
 
     def _mysql_haproxy_pebble_layer(self) -> dict:
-        """Define a pebble layer for HAProxy"""
-
-        return Layer({
-            "summary": "mysql haproxy layer",
-            "description": "pebble config layer for mysql haproxy",
-            "services": {
-                self.service_name: {
-                    "override": "replace",
-                    "summary": "mysql haproxy",
-                    "command": "haproxy -f /configs",
-                    "startup": "enabled",
-                }
+        """Define a pebble layer for HAProxy."""
+        return Layer(
+            {
+                "summary": "mysql haproxy layer",
+                "description": "pebble config layer for mysql haproxy",
+                "services": {
+                    self.service_name: {
+                        "override": "replace",
+                        "summary": "mysql haproxy",
+                        "command": "haproxy -f /configs",
+                        "startup": "enabled",
+                    }
+                },
             }
-        })
+        )
 
     def _push_haproxy_config_to_workload(self) -> None:
-        """Push HAProxy config file to the workload container"""
-
+        """Push HAProxy config file to the workload container."""
         container = self.unit.get_container(WORKLOAD_CONTAINER_NAME)
 
         logger.debug("Pushing new HAProxy config file to the workload container")
@@ -103,16 +103,13 @@ class MySQLHAProxyOperatorCharm(CharmBase):
             self._haproxy_backend_config(),
             permissions=0o600,
             user=HAPROXY_USERNAME,
-            make_dirs=True
+            make_dirs=True,
         )
 
         logger.info("Pushed new HAProxy config file to the workload container")
 
-
-
     def _haproxy_backend_config(self) -> str:
-        """Return a config for HAProxy backends"""
-
+        """Return a config for HAProxy backends."""
         mysql_host = self.model.config.get("mysql_host", "mysql")
         mysql_port = self.model.config.get("mysql_port", 3306)
 
@@ -131,12 +128,10 @@ backend mysql-readers
     option external-check
     external-check command /usr/local/bin/check_mysql.sh
     server mysql {mysql_host}:{mysql_port} check
-
 """
 
     def _restart_haproxy(self) -> None:
-        """Restart the HAProxy service in the workload container using pebble"""
-
+        """Restart the HAProxy service in the workload container using pebble."""
         layer = self._mysql_haproxy_pebble_layer()
 
         container = self.unit.get_container(WORKLOAD_CONTAINER_NAME)
