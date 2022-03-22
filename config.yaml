@@ -1,14 +1,23 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# TEMPLATE-TODO: change this example to suit your needs.
-# If you don't need a config, you can remove the file entirely.
-# It ties in to the example _on_config_changed handler in src/charm.py
-#
-# Learn more about config at: https://juju.is/docs/sdk/config
 
 options:
-  thing:
-    default: 🎁
-    description: A thing used by the charm.
+  mysql_host:
+    default: mysql
+    description: The hostname of the MySQL instance
+    type: string
+
+  mysql_port:
+    default: 3306
+    description: The port of the MySQL instance
+    type: int
+
+  mysql_user:
+    default: root
+    description: The user to access the MySQL instance
+    type: string
+
+  mysql_password:
+    default: root_password
+    description: The password to access the MySQL instance
     type: string
