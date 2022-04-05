@@ -24,7 +24,9 @@ async def test_build_and_deploy(ops_test: OpsTest):
     """
     # build and deploy charm from local source folder
     charm = await ops_test.build_charm(".")
-    resources = {"mysql-haproxy-image": METADATA["resources"]["mysql-haproxy-image"]["upstream-source"]}
+    resources = {
+        "mysql-haproxy-image": METADATA["resources"]["mysql-haproxy-image"]["upstream-source"]
+    }
     await ops_test.model.deploy(charm, resources=resources, application_name=APP_NAME)
 
     # issuing dummy update_status just to trigger an event
